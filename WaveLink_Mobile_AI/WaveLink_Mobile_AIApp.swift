@@ -11,7 +11,7 @@ import SwiftUI
 struct WaveLink_Mobile_AIApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TaskManagerView() // Ensure this is the correct view name
         }
     }
 }
