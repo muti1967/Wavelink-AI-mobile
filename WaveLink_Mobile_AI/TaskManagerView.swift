@@ -94,30 +94,61 @@ struct TaskManagerView: View {
                     }
                 }
 
-                Button(action: assignTask) {
-                    Text("Assign Task")
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .padding()
+                // HStack to align all four buttons side-by-side
+                HStack {
+                    Button(action: assignTask) {
+                        Text("Assign Task")
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
 
-                Button(action: {
-                    newStudentName = ""
-                    newPiUser = ""
-                    newPiHost = ""
-                    newIP = ""
-                    newPiNumber = ""
-                    showAddStudentAlert = true
-                }) {
-                    Text("Add Student")
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                    Spacer() // Add space between the buttons
+
+                    Button(action: {
+                        sendTasksToDevices()
+                    }) {
+                        Text("Send To Device(s)")
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+
+                    Spacer() // Add space between the buttons
+
+                    Button(action: {
+                        newStudentName = ""
+                        newPiUser = ""
+                        newPiHost = ""
+                        newIP = ""
+                        newPiNumber = ""
+                        showAddStudentAlert = true
+                    }) {
+                        Text("Add Student")
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.orange)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+
+                    Spacer() // Add space between the buttons
+
+                    NavigationLink(destination: StudentTasksView(students: $students)) {
+                        Text("View and Edit Tasks")
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
                 }
-                .padding()
+                .padding(.horizontal) // Add horizontal padding to the HStack
+
                 .alert("Add New Student", isPresented: $showAddStudentAlert) {
                     VStack {
                         TextField("Student Name", text: $newStudentName)
@@ -185,14 +216,6 @@ struct TaskManagerView: View {
                     }
                     Button("Cancel", role: .cancel, action: {})
                 }
-
-                NavigationLink(destination: StudentTasksView(students: $students)) {
-                    Text("View and Edit Tasks")
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
             }
             .navigationTitle("Task Manager")
             .onAppear {
@@ -227,8 +250,15 @@ struct TaskManagerView: View {
                     time: timeString,
                     description: taskDescription,
                     audioFilePath: audioFilePath?.path // Save the audio file path
-             
                 )
+
+                // Debugging: Check if the audio file path is valid
+                if let path = audioFilePath?.path, FileManager.default.fileExists(atPath: path) {
+                    print("Audio file path is valid: \(path)")
+                } else {
+                    print("Audio file path is invalid or does not exist.")
+                }
+
                 students[index].tasks.append(newTask)
                 students[index].taskCount += 1
             }
@@ -238,7 +268,12 @@ struct TaskManagerView: View {
         taskDescription = ""
         selectedStudents.removeAll()
         audioFilePath = nil // Reset the audio file path
+    }
 
+
+    func sendTasksToDevices() {
+        // Implement your logic to send tasks to the device(s) here
+        print("Sending tasks to device(s)...")
     }
 
     func addStudent() {
