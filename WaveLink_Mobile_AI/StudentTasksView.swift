@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import Foundation
 
 struct StudentTasksView: View {
     @Binding var students: [Student]
@@ -19,10 +20,11 @@ struct StudentTasksView: View {
         NavigationView {
             VStack {
                 List {
+                    // **First ForEach loop over students**
                     ForEach(students) { student in
                         Section(header: Text(student.name)) {
-                            ForEach(student.tasks.indices, id: \.self) { index in
-                                let task = students[students.firstIndex(where: { $0.id == student.id })!].tasks[index]
+                            // **Second ForEach loop over tasks**
+                            ForEach(student.tasks) { task in
                                 VStack(alignment: .leading) {
                                     Text(task.name).font(.headline)
                                     Text("Task Number: \(task.number)")
@@ -58,24 +60,39 @@ struct StudentTasksView: View {
 
                                     // Delete action
                                     Button("Delete", role: .destructive) {
-                                        if let studentIndex = students.firstIndex(where: { $0.id == student.id }) {
-                                            deleteTask(at: index, for: studentIndex)
+                                        if let studentIndex = students.firstIndex(where: { $0.id == student.id }),
+                                           let taskIndex = students[studentIndex].tasks.firstIndex(where: { $0.id == task.id }) {
+                                            deleteTask(at: taskIndex, for: studentIndex)
                                         }
                                     }
+                                    .tint(.red)
+                                }
+                            }
+                            .onDelete { indices in
+                                if let studentIndex = students.firstIndex(where: { $0.id == student.id }) {
+                                    deleteTask(atOffsets: indices, for: studentIndex)
                                 }
                             }
                         }
                     }
                 }
                 .navigationTitle("Edit Tasks")
-                .navigationBarItems(trailing: Button(action: {
-                    showDeleteConfirmation = true
-                }) {
-                    Image(systemName: "trash")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .foregroundColor(.red)
-                })
+                .navigationBarItems(
+                    leading: Button(action: createDebugData) {
+                        Image(systemName: "ladybug")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(.blue)
+                    },
+                    trailing: Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        Image(systemName: "trash")
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(.red)
+                    }
+                )
                 .alert(isPresented: $showDeleteConfirmation) {
                     Alert(
                         title: Text("Delete All Data"),
@@ -145,10 +162,63 @@ struct StudentTasksView: View {
         }
     }
 
+    // Debug button function
+    func createDebugData() {
+        // Clear existing students
+        students.removeAll()
+
+        // Create default students
+        let student1 = Student(
+            name: "Student 1",
+            tasks: [
+                Task(name: "Task 1", number: 1, time: "9:00 AM", description: "First task for Student 1"),
+                Task(name: "Task 2", number: 2, time: "10:00 AM", description: "Second task for Student 1"),
+                Task(name: "Task 3", number: 3, time: "11:00 AM", description: "Third task for Student 1")
+            ],
+            taskCount: 3 // Number of tasks
+        )
+
+        let student2 = Student(
+            name: "Student 2",
+            tasks: [
+                Task(name: "Task 1", number: 1, time: "12:00 PM", description: "First task for Student 2"),
+                Task(name: "Task 2", number: 2, time: "1:00 PM", description: "Second task for Student 2"),
+                Task(name: "Task 3", number: 3, time: "2:00 PM", description: "Third task for Student 2")
+            ],
+            taskCount: 3 // Number of tasks
+        )
+
+        // Add students to the list
+        students.append(student1)
+        students.append(student2)
+    }
+
     // Function to delete a task
     func deleteTask(at index: Int, for studentIndex: Int) {
+        // Remove the task at the given index
         students[studentIndex].tasks.remove(at: index)
-        updateTaskNumbers(for: studentIndex)
+        students[studentIndex].taskCount -= 1 // Decrement the task count
+
+        // Adjust task numbers for tasks beyond the deleted index
+        for i in index..<students[studentIndex].tasks.count {
+            students[studentIndex].tasks[i].number -= 1
+        }
+    }
+
+    func deleteTask(atOffsets offsets: IndexSet, for studentIndex: Int) {
+        // Sort offsets in descending order to prevent index shifting issues
+        let sortedOffsets = offsets.sorted(by: >)
+
+        // Remove tasks at the specified offsets
+        for offset in sortedOffsets {
+            students[studentIndex].tasks.remove(at: offset)
+        }
+        students[studentIndex].taskCount = students[studentIndex].tasks.count // Update task count
+
+        // Renumber all tasks to ensure proper ordering
+        for i in 0..<students[studentIndex].tasks.count {
+            students[studentIndex].tasks[i].number = i + 1
+        }
     }
 
     // Function to handle audio playback
@@ -162,25 +232,16 @@ struct StudentTasksView: View {
         }
 
         if currentlyPlayingTaskID == task.id {
-            // If the audio is already playing, pause it
             audioPlayer?.pause()
             currentlyPlayingTaskID = nil
         } else {
-            // Stop any currently playing audio
             audioPlayer?.stop()
-
             do {
-                // Set up the audio session for playback
                 try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
                 try AVAudioSession.sharedInstance().setActive(true)
-
-                // Initialize and play the audio
                 audioPlayer = try AVAudioPlayer(contentsOf: audioURL)
                 audioPlayer?.play()
                 currentlyPlayingTaskID = task.id
-
-                // Debugging output
-                print("Playing audio from: \(audioURL.path)")
             } catch {
                 print("Failed to play audio: \(error)")
             }
@@ -237,9 +298,10 @@ struct StudentTasksView: View {
 
     // Function to update task numbers after deletion
     func updateTaskNumbers(for studentIndex: Int) {
-        for index in students[studentIndex].tasks.indices {
-            students[studentIndex].tasks[index].number = index + 1
+        for (index, _) in students[studentIndex].tasks.enumerated() {
+            students[studentIndex].tasks[index].number = index + 1 // Assign 1-based task numbers
         }
+        print("Updated Task Numbers:", students[studentIndex].tasks.map { $0.number })
     }
 
     // Function to save task edits
@@ -262,6 +324,11 @@ struct StudentTasksView: View {
             }
         }
         self.taskToEdit = nil
+    }
+
+    func addNewTask(to studentIndex: Int, task: Task) {
+        students[studentIndex].tasks.append(task)
+        students[studentIndex].taskCount += 1 // Increment task count
     }
 
     // Helper function to parse time string into Date

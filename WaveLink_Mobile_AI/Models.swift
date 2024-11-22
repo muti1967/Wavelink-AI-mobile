@@ -1,12 +1,13 @@
 import Foundation
+import Combine
 
-struct Task: Identifiable, Codable, Equatable {
+class Task: Identifiable, ObservableObject, Codable, Equatable {
     let id: UUID
-    var name: String
-    var number: Int
-    var time: String
-    var description: String
-    var audioFilePath: String? // New property to store the audio file path
+    @Published var name: String
+    @Published var number: Int
+    @Published var time: String
+    @Published var description: String
+    @Published var audioFilePath: String?
 
     init(id: UUID = UUID(), name: String, number: Int, time: String, description: String, audioFilePath: String? = nil) {
         self.id = id
@@ -17,10 +18,44 @@ struct Task: Identifiable, Codable, Equatable {
         self.audioFilePath = audioFilePath
     }
 
+    // MARK: - Codable Conformance
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case number
+        case time
+        case description
+        case audioFilePath
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        // Decode the wrapped values
+        name = try container.decode(String.self, forKey: .name)
+        number = try container.decode(Int.self, forKey: .number)
+        time = try container.decode(String.self, forKey: .time)
+        description = try container.decode(String.self, forKey: .description)
+        audioFilePath = try container.decodeIfPresent(String.self, forKey: .audioFilePath)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        // Encode the wrapped values
+        try container.encode(name, forKey: .name)
+        try container.encode(number, forKey: .number)
+        try container.encode(time, forKey: .time)
+        try container.encode(description, forKey: .description)
+        try container.encodeIfPresent(audioFilePath, forKey: .audioFilePath)
+    }
+
     static func == (lhs: Task, rhs: Task) -> Bool {
         return lhs.id == rhs.id
     }
 }
+
 
 struct Student: Identifiable, Codable, Equatable {
     let id: UUID
