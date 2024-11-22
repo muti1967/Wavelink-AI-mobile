@@ -64,16 +64,18 @@ struct Student: Identifiable, Codable, Equatable {
     var piHost: String
     var ip: String
     var piNumber: String
+    var piPassword: String
     var tasks: [Task]
     var taskCount: Int
 
-    init(id: UUID = UUID(), name: String, piUser: String = "", piHost: String = "", ip: String = "", piNumber: String = "", tasks: [Task] = [], taskCount: Int = 1) {
+    init(id: UUID = UUID(), name: String, piUser: String = "", piHost: String = "", ip: String = "", piNumber: String = "", piPassword: String = "", tasks: [Task] = [], taskCount: Int = 1) {
         self.id = id
         self.name = name
         self.piUser = piUser
         self.piHost = piHost
         self.ip = ip
         self.piNumber = piNumber
+        self.piPassword = piPassword
         self.tasks = tasks
         self.taskCount = taskCount
     }
@@ -89,3 +91,5 @@ struct Student: Identifiable, Codable, Equatable {
                lhs.taskCount == rhs.taskCount
     }
 }
+
+

@@ -1,0 +1,24 @@
+//
+//  AudioRecorderDelegate 2.swift
+//  WaveLink_Mobile_AI
+//
+//  Created by Muti Shuman  on 11/21/24.
+//
+
+
+import AVFoundation
+
+class AudioRecorderDelegate: NSObject, AVAudioRecorderDelegate {
+    var onFinishRecording: ((Bool) -> Void)?
+
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        // Notify when recording has finished
+        onFinishRecording?(flag)
+    }
+
+    func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+        if let error = error {
+            print("Recording encode error: \(error.localizedDescription)")
+        }
+    }
+}

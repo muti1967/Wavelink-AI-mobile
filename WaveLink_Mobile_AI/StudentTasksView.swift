@@ -15,6 +15,8 @@ struct StudentTasksView: View {
     @State private var updatedAudioFilePath: URL? = nil
     @State private var showDeleteConfirmation: Bool = false
     @State private var audioPlayer: AVAudioPlayer? = nil
+    
+    let audioRecorderDelegate = AudioRecorderDelegate()
 
     var body: some View {
         NavigationView {
@@ -175,7 +177,7 @@ struct StudentTasksView: View {
                 Task(name: "Task 2", number: 2, time: "10:00 AM", description: "Second task for Student 1"),
                 Task(name: "Task 3", number: 3, time: "11:00 AM", description: "Third task for Student 1")
             ],
-            taskCount: 3 // Number of tasks
+            taskCount: 4 // Number of tasks because it starts at 0 index
         )
 
         let student2 = Student(
@@ -185,7 +187,7 @@ struct StudentTasksView: View {
                 Task(name: "Task 2", number: 2, time: "1:00 PM", description: "Second task for Student 2"),
                 Task(name: "Task 3", number: 3, time: "2:00 PM", description: "Third task for Student 2")
             ],
-            taskCount: 3 // Number of tasks
+            taskCount: 4 // Number of tasks starts at 0 index
         )
 
         // Add students to the list
@@ -248,7 +250,7 @@ struct StudentTasksView: View {
         }
     }
 
-    // Function to delete all data
+    /* OLD Function to delete all data
     func deleteAllData() {
         students.removeAll()
         UserDefaults.standard.removeObject(forKey: "students")
@@ -265,8 +267,29 @@ struct StudentTasksView: View {
             }
         }
     }
+     */
+    
+    // Function to delete all data
+    func deleteAllData() {
+        students.removeAll()
+        UserDefaults.standard.removeObject(forKey: "students")
 
-    // Function to start recording audio
+        let fileManager = FileManager.default
+        if let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
+            do {
+                let fileURLs = try fileManager.contentsOfDirectory(at: documentDirectory, includingPropertiesForKeys: nil)
+                for fileURL in fileURLs {
+                    if fileURL.pathExtension == "m4a" {
+                        try fileManager.removeItem(at: fileURL)
+                    }
+                }
+            } catch {
+                print("Failed to delete audio files: \(error)")
+            }
+        }
+    }
+
+
     func startRecording() {
         let fileName = UUID().uuidString + ".m4a"
         let documentPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -281,7 +304,14 @@ struct StudentTasksView: View {
         ]
 
         do {
+            // Configure the audio session
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playAndRecord, mode: .default)
+            try audioSession.setActive(true)
+
+            // Initialize and start the recorder
             audioRecorder = try AVAudioRecorder(url: audioURL, settings: settings)
+            audioRecorder?.delegate = audioRecorderDelegate // Assign the delegate
             audioRecorder?.prepareToRecord()
             audioRecorder?.record()
             isRecording = true
@@ -290,11 +320,20 @@ struct StudentTasksView: View {
         }
     }
 
-    // Function to stop recording audio
+
+
     func stopRecording() {
         audioRecorder?.stop()
         isRecording = false
+
+        // Deactivate the audio session
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        } catch {
+            print("Failed to deactivate audio session: \(error)")
+        }
     }
+
 
     // Function to update task numbers after deletion
     func updateTaskNumbers(for studentIndex: Int) {
@@ -304,7 +343,6 @@ struct StudentTasksView: View {
         print("Updated Task Numbers:", students[studentIndex].tasks.map { $0.number })
     }
 
-    // Function to save task edits
     func saveTaskEdits() {
         guard let taskToEdit = taskToEdit else { return }
 
@@ -317,14 +355,25 @@ struct StudentTasksView: View {
                 formatter.timeStyle = .short
                 students[studentIndex].tasks[taskIndex].time = formatter.string(from: editedTaskTime)
 
-                if let newAudioPath = updatedAudioFilePath?.path {
-                    students[studentIndex].tasks[taskIndex].audioFilePath = newAudioPath
+                if let newAudioURL = updatedAudioFilePath {
+                    // Delete the old audio file if it exists
+                    if let oldAudioPath = students[studentIndex].tasks[taskIndex].audioFilePath {
+                        let oldAudioURL = URL(fileURLWithPath: oldAudioPath)
+                        do {
+                            try FileManager.default.removeItem(at: oldAudioURL)
+                        } catch {
+                            print("Failed to delete old audio file: \(error)")
+                        }
+                    }
+                    // Update the task's audioFilePath with the new recording
+                    students[studentIndex].tasks[taskIndex].audioFilePath = newAudioURL.path
                 }
                 break
             }
         }
         self.taskToEdit = nil
     }
+
 
     func addNewTask(to studentIndex: Int, task: Task) {
         students[studentIndex].tasks.append(task)

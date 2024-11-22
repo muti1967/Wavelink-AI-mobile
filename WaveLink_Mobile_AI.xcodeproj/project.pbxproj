@@ -29,9 +29,33 @@
 		2D20B8552CED231200F9B837 /* WaveLink_Mobile_AIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WaveLink_Mobile_AIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2D7D57172CF0440C00F997E0 /* Exceptions for "WaveLink_Mobile_AI" folder in "WaveLink_Mobile_AI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				audiorecdel,
+			);
+			target = 2D20B83A2CED231000F9B837 /* WaveLink_Mobile_AI */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		2D7D57182CF0440C00F997E0 /* Exceptions for "WaveLink_Mobile_AI" folder in "Compile Sources" phase from "WaveLink_Mobile_AI" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 2D20B8372CED231000F9B837 /* Sources */;
+			membershipExceptions = (
+				audiorecdel,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2D20B83D2CED231000F9B837 /* WaveLink_Mobile_AI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2D7D57172CF0440C00F997E0 /* Exceptions for "WaveLink_Mobile_AI" folder in "WaveLink_Mobile_AI" target */,
+				2D7D57182CF0440C00F997E0 /* Exceptions for "WaveLink_Mobile_AI" folder in "Compile Sources" phase from "WaveLink_Mobile_AI" target */,
+			);
 			path = WaveLink_Mobile_AI;
 			sourceTree = "<group>";
 		};
